@@ -1,0 +1,6 @@
+{
+  "name": "ObraMaster ERP - Gestão de Construção Civil",
+  "description": "Sistema ERP web completo para construtoras com gestão de obras, diário de obra, financeiro, compras, estoque, equipamentos, RH, documentos e relatórios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
