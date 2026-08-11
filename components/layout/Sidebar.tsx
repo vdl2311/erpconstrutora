@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext';
 import {
   LayoutDashboard,
@@ -19,7 +19,9 @@ import {
   ShieldCheck,
   ChevronRight,
   Sparkles,
-  X
+  X,
+  SlidersHorizontal,
+  Check
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +31,19 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+interface MenuItem {
+  key: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  badgeColor?: string;
+}
+
+interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
 export const Sidebar: React.FC<SidebarProps> = (props) => {
   const { activeModule: ctxModule, setActiveModule, hasPermission, notificacoes, solicitacoesCompra, contasPagar } = useERP();
   const activeModule = props.activeModule ?? ctxModule;
@@ -36,11 +51,55 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
   const isOpen = props.isOpen;
   const onClose = props.onClose;
 
+  // MVP view mode state - defaults to true for clean MVP presentation
+  const [showOnlyMvp, setShowOnlyMvp] = useState(true);
+
   const unreadAlerts = notificacoes.filter(n => !n.lida).length;
   const pendingPurchases = solicitacoesCompra.filter(s => s.status === 'solicitada' || s.status === 'aguardando_aprovacao').length;
   const overdueBills = contasPagar.filter(c => c.status === 'vencido').length;
 
-  const menuSections = [
+  const mvpMenuSections: MenuSection[] = [
+    {
+      title: 'PRINCIPAL',
+      items: [
+        { key: 'dashboard', label: 'Dashboard Executivo', icon: LayoutDashboard }
+      ]
+    },
+    {
+      title: 'OBRAS & CAMPO',
+      items: [
+        { key: 'obras', label: 'Gestão de Obras', icon: HardHat },
+        { key: 'diario', label: 'Diário de Obra', icon: FileSpreadsheet }
+      ]
+    },
+    {
+      title: 'FINANCEIRO & COMPRAS',
+      items: [
+        {
+          key: 'financeiro',
+          label: 'Contas & Fluxo de Caixa',
+          icon: DollarSign,
+          badge: overdueBills > 0 ? `${overdueBills} vencidas` : undefined,
+          badgeColor: 'bg-red-500'
+        },
+        {
+          key: 'compras',
+          label: 'Compras & Cotações',
+          icon: ShoppingCart,
+          badge: pendingPurchases > 0 ? `${pendingPurchases} pend.` : undefined,
+          badgeColor: 'bg-amber-500'
+        }
+      ]
+    },
+    {
+      title: 'ANÁLISE',
+      items: [
+        { key: 'relatorios', label: 'Relatórios Gerenciais', icon: BarChart3 }
+      ]
+    }
+  ];
+
+  const fullMenuSections: MenuSection[] = [
     {
       title: 'VISÃO GERAL',
       items: [
@@ -104,6 +163,8 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
       ]
     }
   ];
+
+  const menuSections = showOnlyMvp ? mvpMenuSections : fullMenuSections;
 
   return (
     <>
@@ -183,19 +244,39 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
               </div>
             </div>
           ))}
-      </div>
-
-      {/* Footer Banner */}
-      <div className="p-3 border-t border-slate-800 bg-[#16161A] m-2 rounded-xl">
-        <div className="flex items-center gap-2 text-[#C5A059] text-xs font-bold">
-          <Sparkles className="h-4 w-4" />
-          <span>ObraMaster Pro</span>
+          {/* MVP Toggle Button */}
+          <div className="pt-2 px-1">
+            <button
+              onClick={() => setShowOnlyMvp(!showOnlyMvp)}
+              className="w-full flex items-center justify-between gap-2 p-2.5 rounded-lg border border-slate-800 bg-[#16161A] text-slate-400 hover:text-slate-200 hover:border-slate-700 text-[11px] font-medium transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-[#C5A059]" />
+                <span>{showOnlyMvp ? 'Visão MVP (6 Módulos)' : 'Visão Completa (13 Módulos)'}</span>
+              </div>
+              <span className="text-[10px] font-bold text-[#C5A059] underline">
+                {showOnlyMvp ? '+ Expandir' : 'Recolher'}
+              </span>
+            </button>
+          </div>
         </div>
-        <p className="text-[10px] text-slate-500 mt-1">
-          ERP Ativo • Versão 2.8.4 Web
-        </p>
-      </div>
-    </aside>
-  </>
-);
+
+        {/* Footer Banner */}
+        <div className="p-3 border-t border-slate-800 bg-[#16161A] m-2 rounded-xl">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <div className="flex items-center gap-2 text-[#C5A059]">
+              <Sparkles className="h-4 w-4" />
+              <span>ObraMaster MVP</span>
+            </div>
+            <span className="text-[9px] font-mono bg-[#C5A059]/10 text-[#C5A059] px-1.5 py-0.5 rounded border border-[#C5A059]/20">
+              v1.0.0
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">
+            Sistema ERP de Engenharia & Construção
+          </p>
+        </div>
+      </aside>
+    </>
+  );
 };
